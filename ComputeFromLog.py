@@ -5,7 +5,7 @@
 # Released under GNU GPLv3
 
 
-from scipy import ones, zeros, floor, array, sqrt, cov
+from numpy import ones, zeros, floor, array, sqrt, cov
 
 import getopt, sys
 
@@ -84,7 +84,7 @@ def estimate( file, detailed ):
     ssd = sum(p*s)
     delta = 1.96 * ssd / sqrt(num_samples)
 
-    print("%6i  % 5.1f +/- % 5.1f SD % 5.1f" % (num_samples, est, delta, ssd), end=' ')
+    print(f"{num_samples:6d}  {est: 5.1f} +/- {delta: 5.1f} SD {ssd: 5.1f}", end=' ')
 
     return
 
