@@ -114,7 +114,7 @@ def normalise_reward( episode_length, disc_rate, disc_reward ):
 def simple_mc_estimator( refm_call, agent_call, episode_length, disc_rate, \
                          sample_size ):
 
-    print
+    print()
     result = zeros((len(sample_data)))
     i = 0
     for stratum, program in sample_data:
@@ -126,7 +126,7 @@ def simple_mc_estimator( refm_call, agent_call, episode_length, disc_rate, \
             if i%10 == 0 and i > 10:
                 mean = result[:i].mean()
                 half_ci = 1.96*result[:i].std(ddof=1)/sqrt(i)
-                print "         %6i  % 5.1f +/- % 5.1f " % ( i, mean, half_ci )
+                print("         %6i  % 5.1f +/- % 5.1f " % (i, mean, half_ci))
             i += 1
             if i >= sample_size: break
 
@@ -159,10 +159,10 @@ def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samp
             N[i] = float(max_samples)
             N = N[:i+1]
             break
-        
-    print "Sample size steps:"
-    print N
-    
+
+    print("Sample size steps:")
+    print(N)
+
     K = len(N)                 # number of adaptive stratification stages
     Y = [[] for i in range(I)] # empty collection of samples divided up by stratum
     Y[0] = [0]
@@ -171,8 +171,7 @@ def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samp
     est = zeros((K))           # estimated confidence intervals
 
     for k in range( 1, K ):
-        print
-
+        print()
         # compute the allocations with "method a" from the paper,
         # deducting 2A from the target which is added afterward to ensure
         # all strata get at least 2 samples
@@ -200,10 +199,10 @@ def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samp
 
         # add samples to processing pool (we skip stratum 0 which is passive)
         for i in range(1,I):
-            for j in range(int(M[i])/2): # /2 is due to sampling each program twice
+            for j in range(int(M[i])//2): # /2 is due to sampling each program twice
 
                 if len(samples[i]) == 0:
-                    print "Error: Run out of program samples in stratum: " + str(i)
+                    print("Error: Run out of program samples in stratum: " + str(i))
                     sys.exit()
 
                 program = samples[i].pop(0)
@@ -227,8 +226,8 @@ def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samp
                     # run failed so get a new sample and add to processing pool
                     #print "Adding extra sample to the pool due to run failure"
                     if len(samples[stratum]) == 0:
-                        print "Error: Run out of program samples in stratum: " \
-                              + str(stratum)
+                        print("Error: Run out of program samples in stratum: "
+                              + str(stratum))
                         sys.exit()
 
                     program = samples[stratum].pop(0)
@@ -265,20 +264,20 @@ def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samp
 
         # report current estimates by strata
         for i in range(1,I):
-            print " % 3d % 4d % 5d" % (i, int(M[i]), n[k][i] ),
+            print(" % 3d % 4d % 5d" % (i, int(M[i]), n[k][i]), end=' ')
 
             if n[k][i] == 0: 
                 # no samples, so skip mean and half CI
-                print
-            elif n[k][i] < 4: 
+                print()
+            elif n[k][i] < 4:
                 # don't report half CI with less than 4 program samples
-                print " % 6.1f" % (array(Y[i]).mean() )
+                print(" % 6.1f" % (array(Y[i]).mean()))
             else:
                 # do a full report
                 # statistical samples is twice program samples due to antithetic vars
-                print " % 6.1f +/- % 5.1f" \
-                   % (array(Y[i]).mean(), 1.96*s[k,i]/sqrt(n[k][i]) )
-                    
+                print(" % 6.1f +/- % 5.1f"
+                      % (array(Y[i]).mean(), 1.96 * s[k, i] / sqrt(n[k][i])))
+
         # compute the current estimate and 95% confidence interval
         for i in range(1,I):
             if p[i] > 0.0:
@@ -288,8 +287,8 @@ def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samp
         
         # wait until after 3rd stage due to unreliable early statistics
         if k >= min(3,K-1):
-            print "\n         %6i   % 5.1f +/- % 5.1f " % (N[k], est[k-1], delta )
-        
+            print("\n         %6i   % 5.1f +/- % 5.1f " % (N[k], est[k - 1], delta))
+
     return
 
 
@@ -304,7 +303,7 @@ def load_samples( refm, cluster_node, simple_mc ):
     program_sample_filename = "./refmachines/samples/" + str(refm) \
                               + cluster_node + ".samples"
 
-    print "Loading program samples: " + program_sample_filename
+    print("Loading program samples: " + program_sample_filename)
 
     file = open( program_sample_filename )
 
@@ -327,23 +326,22 @@ def load_samples( refm, cluster_node, simple_mc ):
         samples[ stratum ].append( program )
         dist[ stratum ] += 1.0/num_samples
 
-    print "Number of program samples:" + str(num_samples)
+    print("Number of program samples:" + str(num_samples))
     if not simple_mc:
-        print "Number of strata:        " + str(num_strata)
-        print "Strata distribution:"
-        print str(dist[1:])
-    print
-
+        print("Number of strata:        " + str(num_strata))
+        print("Strata distribution:")
+        print(str(dist[1:]))
+    print()
     return samples, dist
 
 
 # print basic usage
 def usage():
-    print "python AIQ -r reference_machine[,param1[,param2[...]]] " \
-        + "-a agent[,param1[,agent_param2[...]]] " \
-        + "-d discount_rate [-s sample_size] [-l episode_length] " \
-        + "[-n cluster_node] [-t threads] [--log] [--save_samples] " \
-        + "[--verbose_log_el] [--simple_mc]" \
+    print("python AIQ -r reference_machine[,param1[,param2[...]]] "
+          + "-a agent[,param1[,agent_param2[...]]] "
+          + "-d discount_rate [-s sample_size] [-l episode_length] "
+          + "[-n cluster_node] [-t threads] [--log] [--save_samples] "
+          + "[--verbose_log_el] [--simple_mc]")
 
 
 # main function that just sets things up and then calls the sampler
@@ -360,17 +358,16 @@ def main():
     global logging, log_file, sampling, adaptive_sample_file
     global logging_el, log_el_files, intermediate_length
 
-    print
-    print "AIQ version 1.0"
-    print
-
+    print()
+    print("AIQ version 1.0")
+    print()
     # get the command line arguments
     try:
         opts, args = getopt.getopt(sys.argv[1:], "r:d:l:a:n:s:t:",
                                    ["help", "log", "save_samples", "simple_mc",
                                     "verbose_log_el"])
-    except getopt.GetoptError, err:
-        print str(err)
+    except getopt.GetoptError as err:
+        print(str(err))
         usage()
         sys.exit(2)
 
@@ -414,7 +411,7 @@ def main():
         elif opt == "--simple_mc":      simple_mc   = True
         elif opt == "--verbose_log_el": logging_el  = True
         else:
-            print "Unrecognised option"
+            print("Unrecognised option")
             usage()
             sys.exit()
 
@@ -431,8 +428,8 @@ def main():
     proportion_of_total = 0.95
     if episode_length == None:
         if disc_rate == 1.0:
-            print "With a discount rate of 1.0 you must set the episode length."
-            print
+            print("With a discount rate of 1.0 you must set the episode length.")
+            print()
             usage()
             sys.exit()
         else:
@@ -454,26 +451,24 @@ def main():
     agent = eval( agent_call )
 
     # report settings
-    print "Reference machine:       " + str(refm)
-    print "RL Agent:                " + str(agent)
-    print "Discount rate:           " + str(disc_rate)
-    print "Episode length:          " + str(episode_length),
+    print("Reference machine:       " + str(refm))
+    print("RL Agent:                " + str(agent))
+    print("Discount rate:           " + str(disc_rate))
+    print("Episode length:          " + str(episode_length), end=' ')
     if disc_rate != 1.0:
-        print " which covers %3.1f%% of the infinite geometric total" \
-              % (100.0*proportion_of_total)
+        print(" which covers %3.1f%% of the infinite geometric total"
+              % (100.0 * proportion_of_total))
     else:
-        print
-
+        print()
     if agent == "Manual()" and not simple_mc:
-        print "Error: Manaual agent only works with simple_mc sampling"
+        print("Error: Manaual agent only works with simple_mc sampling")
         sys.exit()
 
     if disc_rate != 1.0 and proportion_of_total < 0.75:
-        print
-        print "WARNING: The episode length is too short for this discout rate!"
-        print
-
-    print "Sample size:             " + str(sample_size)
+        print()
+        print("WARNING: The episode length is too short for this discout rate!")
+        print()
+    print("Sample size:             " + str(sample_size))
 
     # load in program samples
     samples, dist = load_samples( refm, cluster_node, simple_mc )
@@ -484,9 +479,9 @@ def main():
     # The following is a crude check as we can still run out of samples in a
     # stratum depending on how the adaptive stratification decides to sample.
     if sample_size > 2.0 * len(sample_data):
-        print
-        print "Error: More samples have been requested than are available in " \
-              "the program sample file! (including fact that they are sampled twice)"
+        print()
+        print("Error: More samples have been requested than are available in "
+              "the program sample file! (including fact that they are sampled twice)")
         sys.exit()
 
     # report logging
@@ -499,7 +494,7 @@ def main():
             log_file.write( str(dist[i]) + " " )
         log_file.write("\n")
         log_file.flush()
-        print "Logging to file:         " + log_file_name
+        print("Logging to file:         " + log_file_name)
 
     # set up file to save used adaptive samples
     if sampling:
@@ -507,7 +502,7 @@ def main():
                         + str(episode_length) + "_" + str(agent) + cluster_node \
                         + strftime("_%Y_%m%d_%H_%M_%S",localtime()) + ".samples"
         adaptive_sample_file = open( adaptive_sample_file_name, 'w' )
-        print "Saving used adaptive samples to file: " + adaptive_sample_file_name
+        print("Saving used adaptive samples to file: " + adaptive_sample_file_name)
 
     # set up files to log results at intermediate ELs
     if logging_el:
@@ -517,7 +512,7 @@ def main():
                             + strftime("_%Y_%m%d_%H_%M_%S",localtime())
             if not os.path.exists( "./log-el/" + log_el_dir_name ):
                 os.makedirs( "./log-el/" + log_el_dir_name )
-            for i in range( 1, episode_length / intermediate_length + 1 ):
+            for i in range( 1, episode_length // intermediate_length + 1 ):
                 log_el_file_name = "./log-el/" + log_el_dir_name + "/" + str(refm) + "_" \
                         + str(disc_rate) + "_" + str(i * intermediate_length) + "_" + str(agent) + cluster_node \
                         + strftime("_%Y_%m%d_%H_%M_%S",localtime()) + ".log"
@@ -527,10 +522,10 @@ def main():
                 log_el_file.write("\n")
                 log_el_file.flush()
                 log_el_files.append( log_el_file )
-            print "Verbose logging at intermediate ELs to directory: ./log-el/" + log_el_dir_name
+            print("Verbose logging at intermediate ELs to directory: ./log-el/" + log_el_dir_name)
         else:
-            print "Warning: Episode Length " + str(episode_length) + " is less than Intermediate Episode Length " \
-                    + str(intermediate_length) + "! Verbose logging at Intermediate Episode Lengths will be disabled."
+            print("Warning: Episode Length " + str(episode_length) + " is less than Intermediate Episode Length "
+                  + str(intermediate_length) + "! Verbose logging at Intermediate Episode Lengths will be disabled.")
             logging_el = False
 
     # run an estimation algorithm
@@ -553,7 +548,7 @@ def main():
 
     # close log-el files
     if logging_el:
-        for i in range( episode_length / intermediate_length ):
+        for i in range( episode_length // intermediate_length ):
             log_el_files.pop().close()
     
 if __name__ == "__main__":

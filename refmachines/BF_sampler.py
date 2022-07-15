@@ -10,7 +10,6 @@
 import random
 from numpy import zeros, ones, array
 from scipy import linspace, stats, floor, sqrt
-from string import replace, lower
 import getopt, sys
 from os.path import isfile
 
@@ -27,7 +26,7 @@ def active_program( refm, minimal_length, extending_shorter, theoretical_sampler
     program_length = len(program)
     while program_length < minimal_length:
         if extending_shorter:
-            program = replace(program,'#','')
+            program.replace('#','')
             program += refm.random_program( theoretical_sampler )
         else:
             program = refm.random_program( theoretical_sampler )
@@ -41,7 +40,7 @@ def active_program( refm, minimal_length, extending_shorter, theoretical_sampler
             program_length = len(program)
             while program_length < minimal_length:
                 if extending_shorter:
-                    program = replace(program,'#','')
+                    program.replace('#','')
                     program += refm.random_program( theoretical_sampler )
                 else:
                     program = refm.random_program( theoretical_sampler )
@@ -192,21 +191,19 @@ def _test_class( refm, cycles, program ):
 
 
 def usage():
-    print
-    print "AIQ program sample classifier"
-    print
-    print "python BF_sampler.py -s sample_size -r ref_machine[,para1[,para2[...]]] " \
-            + "-l minimal_length [--extend_shorter] [--theoretical_sampler]"
-    print
+    print()
+    print("AIQ program sample classifier")
+    print()
+    print("python BF_sampler.py -s sample_size -r ref_machine[,para1[,para2[...]]] "
+          + "-l minimal_length [--extend_shorter] [--theoretical_sampler]")
+    print()
 
-    
 
 def main():
 
-    print
-    print "BF reference machine program sampler"
-    print
-
+    print()
+    print("BF reference machine program sampler")
+    print()
     sample_size = 0
     minimal_length = 0
     extending_shorter = False
@@ -217,8 +214,8 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "s:r:l:",
                 ["extend_shorter", "theoretical_sampler", "help"])
-    except getopt.GetoptError, err:
-        print str(err)
+    except getopt.GetoptError as err:
+        print(str(err))
         usage()
         sys.exit(2)
 
@@ -241,20 +238,20 @@ def main():
         elif opt == "--theoretical_sampler":
             theoretical_sampler = True
         else:
-            print "Unrecognised option"
+            print("Unrecognised option")
             usage()
             sys.exit()
 
     if sample_size == 0:
-        print "Error: No sample size set"
+        print("Error: No sample size set")
         sys.exit()
 
     if refm_str == None:
-        print "Missing reference machine"
+        print("Missing reference machine")
         sys.exit()
 
     if refm_str != "BF":
-        print "Can only handle BF reference machine at the moment!"
+        print("Can only handle BF reference machine at the moment!")
         sys.exit()
 
     refm_call = refm_str + "." + refm_str + "("
@@ -274,13 +271,12 @@ def main():
     file_name += refm_call.partition('.')[2] # strip off the module name and dot
     file_name += ".samples"
 
-    print "Output filename: " + file_name
-    print
-
+    print("Output filename: " + file_name)
+    print()
     # check for existing sample file
     if isfile( file_name ):
-        print "Output sample file already exists, do you want to:"
-        choice = lower(raw_input(" Append, Overwrite or Quit [a/o/q] ? "))
+        print("Output sample file already exists, do you want to:")
+        choice = raw_input.lower(" Append, Overwrite or Quit [a/o/q] ? ")
         if   choice == 'a': mode = 'a'
         elif choice == 'o': mode = 'w'
         else: sys.exit()
