@@ -12,7 +12,7 @@ from refmachines import *
 from agents import *
 from math import isnan
 from time import sleep, localtime, strftime
-from scipy import ones, zeros, floor, array, sqrt, log, ceil, cov
+from numpy import ones, zeros, floor, array, sqrt, log, ceil, cov
 from random import choice
 from multiprocessing import Pool
 
@@ -21,40 +21,43 @@ import getopt, sys, os
 
 # Test an agent by performing both positive and negative reward runs in order
 # to get antithetic variance reduction. 
-def test_agent( refm_call, a_call, episode_length, disc_rate, stratum, program ):
+def test_agent( refm_call, a_call, episode_length, disc_rate, stratum, program, config ):
 
     # run twice with flipped reward second time
-    s1, r1, ir1 = _test_agent(refm_call, a_call,  1.0, episode_length,\
-                         disc_rate, stratum, program)
-    s2, r2, ir2 = _test_agent(refm_call, a_call, -1.0, episode_length, \
-                         disc_rate, stratum, program)
+    s1, r1, ir1 = _test_agent(refm_call, a_call,  1.0, episode_length,
+                         disc_rate, stratum, program, config)
+    s2, r2, ir2 = _test_agent(refm_call, a_call, -1.0, episode_length,
+                         disc_rate, stratum, program, config)
 
     # log successful result to file
-    if logging and not isnan(r1) and not isnan(r2):
+    if config["logging"] and not isnan(r1) and not isnan(r2):
+        log_file = open( config["log_file_name"], 'a' )
         log_file.write( strftime("%Y_%m%d_%H:%M:%S ",localtime()) \
               + str(s1) + " " + str(r1) + " " + str(r2) + "\n" )
         log_file.flush()
-        
+        log_file.close()
+
     # log successful intermediate results to files
-    if logging_el and not isnan(r1) and not isnan(r2):
+    if config["logging_el"] and not isnan(r1) and not isnan(r2):
         for i in range( episode_length / intermediate_length ):
-            log_el_file = log_el_files.pop(0)
+            log_el_file_name = config["log_el_files"].pop(0)
+            log_el_file = open()
             log_el_file.write( strftime("%Y_%m%d_%H:%M:%S ",localtime()) \
                   + str(s1) + " " + str( ir1.pop(0) ) + " " + str( ir2.pop(0) ) + "\n" )
             log_el_file.flush()
             log_el_files.append( log_el_file )
 
     # save successfully used program to adaptive samples file
-    if sampling and not isnan(r1) and not isnan(r2):
-        adaptive_sample_file.write( str(stratum) + " " + program + "\n" )
-        adaptive_sample_file.flush()
+    if config["sampling"] and not isnan(r1) and not isnan(r2):
+        config["adaptive_sample_file"].write( str(stratum) + " " + program + "\n" )
+        config["adaptive_sample_file"].flush()
 
     return (s1,r1,r2)
 
 
 # Perform a single run of an agent in an enviornment and collect the results
-def _test_agent( refm_call, agent_call, rflip, episode_length, \
-                 disc_rate, stratum, program ):
+def _test_agent( refm_call, agent_call, rflip, episode_length,
+                 disc_rate, stratum, program, config ):
 
     # create reference machine
     refm = eval( refm_call )
@@ -69,7 +72,7 @@ def _test_agent( refm_call, agent_call, rflip, episode_length, \
     # list of intermediate results
     disc_rewards = []
 
-    reward, observations = refm.reset( program )
+    reward, observations = refm.reset(program = program )
 
     for i in range(1, episode_length + 1 ):
         action = agent.perceive( observations, rflip*reward )
@@ -82,8 +85,8 @@ def _test_agent( refm_call, agent_call, rflip, episode_length, \
         disc_reward += discount*rflip*reward
         discount    *= disc_rate
 
-        if logging_el:
-            if i % intermediate_length == 0:
+        if config["logging_el"]:
+            if i % config["intermediate_length"] == 0:
                 intermediate_reward = normalise_reward( i, disc_rate, disc_reward )
                 disc_rewards.append( intermediate_reward )
 
@@ -111,16 +114,16 @@ def normalise_reward( episode_length, disc_rate, disc_reward ):
 
 # Simple MC estimator, useful for checking the more complex adaptive estimator.
 # It doesn't do logging as the log file assumes dual runs for antithetic variables.
-def simple_mc_estimator( refm_call, agent_call, episode_length, disc_rate, \
-                         sample_size ):
+def simple_mc_estimator( refm_call, agent_call, episode_length, disc_rate,
+                         sample_size, config ):
 
     print()
-    result = zeros((len(sample_data)))
+    result = zeros((len(config["sample_data"])))
     i = 0
-    for stratum, program in sample_data:
+    for stratum, program in config["sample_data"]:
         rflip = choice([-1,1])
-        perf = _test_agent( refm_call, agent_call, rflip, episode_length, disc_rate, \
-                            stratum, program )[1]
+        perf = _test_agent( refm_call, agent_call, rflip, episode_length, disc_rate,
+                            stratum, program, config )[1]
         if not isnan(perf):
             result[i] = perf
             if i%10 == 0 and i > 10:
@@ -138,7 +141,7 @@ def simple_mc_estimator( refm_call, agent_call, episode_length, disc_rate, \
 # N total number of samples taken in each step (i.e. across all strata)
 # p probability of being in a stratum
 def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samples, \
-                          sample_size, dist, threads ):
+                          sample_size, dist, threads, config ):
 
     p = dist         # get probability of being in each stratum
     I = len(dist)    # number of strata, including passive
@@ -153,7 +156,7 @@ def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samp
          1250*A, 1500*A, 1750*A, 2000*A, 2500*A, 3000*A, 3500*A, 4000*A, 5000*A]
 
     # trim to number of program samples, or requested sample size, which ever is smaller
-    max_samples = min( len(sample_data), sample_size )
+    max_samples = min( len(config["sample_data"]), sample_size )
     for i in range(len(N)):
         if N[i]+A >= max_samples:
             N[i] = float(max_samples)
@@ -206,7 +209,7 @@ def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samp
                     sys.exit()
 
                 program = samples[i].pop(0)
-                args = (refm_call, agent_call, episode_length, disc_rate, i, program)
+                args = (refm_call, agent_call, episode_length, disc_rate, i, program, config )
                 result = pool.apply_async( test_agent, args )
                 results.append( result )
 
@@ -231,7 +234,7 @@ def stratified_estimator( refm_call, agent_call, episode_length, disc_rate, samp
                         sys.exit()
 
                     program = samples[stratum].pop(0)
-                    args = (refm_call, agent_call, episode_length, disc_rate, stratum, program)
+                    args = (refm_call, agent_call, episode_length, disc_rate, stratum, program, config)
                     result = pool.apply_async( test_agent, args )
                     results.append( result )
                 else:
@@ -461,12 +464,12 @@ def main():
     else:
         print()
     if agent == "Manual()" and not simple_mc:
-        print("Error: Manaual agent only works with simple_mc sampling")
+        print("Error: Manual agent only works with simple_mc sampling")
         sys.exit()
 
     if disc_rate != 1.0 and proportion_of_total < 0.75:
         print()
-        print("WARNING: The episode length is too short for this discout rate!")
+        print("WARNING: The episode length is too short for this discount rate!")
         print()
     print("Sample size:             " + str(sample_size))
 
@@ -494,6 +497,7 @@ def main():
             log_file.write( str(dist[i]) + " " )
         log_file.write("\n")
         log_file.flush()
+        log_file.close()
         print("Logging to file:         " + log_file_name)
 
     # set up file to save used adaptive samples
@@ -521,27 +525,40 @@ def main():
                     log_el_file.write( str(dist[j]) + " " )
                 log_el_file.write("\n")
                 log_el_file.flush()
-                log_el_files.append( log_el_file )
+                log_el_file.close()
+                log_el_files.append( log_el_file_name )
             print("Verbose logging at intermediate ELs to directory: ./log-el/" + log_el_dir_name)
         else:
             print("Warning: Episode Length " + str(episode_length) + " is less than Intermediate Episode Length "
                   + str(intermediate_length) + "! Verbose logging at Intermediate Episode Lengths will be disabled.")
             logging_el = False
 
+    config = {
+        "logging": logging,
+        "log_file_name": log_file_name,
+        "sampling": sampling,
+        "sample_data": sample_data,
+        "adaptive_sample_file": adaptive_sample_file,
+        "logging_el": logging_el,
+        "log_el_files": log_el_files,
+        "intermediate_length": intermediate_length
+    }
+
     # run an estimation algorithm
     if simple_mc:
-        simple_mc_estimator( refm_call, agent_call, episode_length, disc_rate, sample_size )
+        simple_mc_estimator( refm_call, agent_call, episode_length, disc_rate, sample_size, config)
     else:
         # Kill agent and pass in its constructor call, this is because on Windows
         # some agents have trouble serialising which messes up the multiprocessing
         # library that Python uses.  Easier just to construct the agent inside the
         # method that gets called in parallel.
-        agent = None 
+        agent = None
+
         stratified_estimator( refm_call, agent_call, episode_length, disc_rate,
-                              samples, sample_size, dist, threads )
+                              samples, sample_size, dist, threads, config)
 
     # close log file
-    if logging: log_file.close()
+    # if logging: log_file.close()
 
     # close adaptive samples file
     if sampling: adaptive_sample_file.close()
@@ -549,7 +566,7 @@ def main():
     # close log-el files
     if logging_el:
         for i in range( episode_length // intermediate_length ):
-            log_el_files.pop().close()
+            config["log_el_files"].pop().close()
     
 if __name__ == "__main__":
     main()

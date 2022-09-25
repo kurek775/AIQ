@@ -9,7 +9,6 @@
 
 import random
 from numpy import zeros, ones, array
-from scipy import linspace, stats, floor, sqrt
 import getopt, sys
 from os.path import isfile
 
