@@ -9,8 +9,7 @@
 import random
 import sys
 
-from .ReferenceMachine import *
-
+import ReferenceMachine
 from numpy import zeros, ones, array, linspace
 from scipy import stats, floor, sqrt
 # from string import replace
@@ -19,7 +18,7 @@ from scipy import stats, floor, sqrt
 INSTRUCTIONS = ['<','>','+','-',',','.','[',']','#', '%' ]
 
 
-class BF(ReferenceMachine):
+class BF(ReferenceMachine.ReferenceMachine):
 
 
     # create a new BF reference machine, default to a tape with 5 symbols

@@ -41,16 +41,19 @@ def test_agent( refm_call, a_call, episode_length, disc_rate, stratum, program, 
     if config["logging_el"] and not isnan(r1) and not isnan(r2):
         for i in range( episode_length / intermediate_length ):
             log_el_file_name = config["log_el_files"].pop(0)
-            log_el_file = open()
+            log_el_file = open(log_el_file_name, 'a')
             log_el_file.write( strftime("%Y_%m%d_%H:%M:%S ",localtime()) \
                   + str(s1) + " " + str( ir1.pop(0) ) + " " + str( ir2.pop(0) ) + "\n" )
             log_el_file.flush()
-            log_el_files.append( log_el_file )
+            log_el_file.close()
+            log_el_files.append( log_el_file_name )
 
     # save successfully used program to adaptive samples file
     if config["sampling"] and not isnan(r1) and not isnan(r2):
-        config["adaptive_sample_file"].write( str(stratum) + " " + program + "\n" )
-        config["adaptive_sample_file"].flush()
+        adaptive_sample_file = open(config["adaptive_sample_file"], 'a')
+        adaptive_sample_file.write( str(stratum) + " " + program + "\n" )
+        adaptive_sample_file.flush()
+        adaptive_sample_file.close()
 
     return (s1,r1,r2)
 
@@ -487,6 +490,8 @@ def main():
               "the program sample file! (including fact that they are sampled twice)")
         sys.exit()
 
+    # Assignment for dictionary even if not used
+    log_file_name = ''
     # report logging
     if logging:
         log_file_name = "./log/" + str(refm) + "_" + str(disc_rate) + "_" \
@@ -500,13 +505,16 @@ def main():
         log_file.close()
         print("Logging to file:         " + log_file_name)
 
+    # Assignment for dictionary even if not used
+    adaptive_sample_file_name = ''
     # set up file to save used adaptive samples
     if sampling:
         adaptive_sample_file_name = "./adaptive-samples/" + str(refm) + "_" + str(disc_rate) + "_" \
                         + str(episode_length) + "_" + str(agent) + cluster_node \
                         + strftime("_%Y_%m%d_%H_%M_%S",localtime()) + ".samples"
-        adaptive_sample_file = open( adaptive_sample_file_name, 'w' )
+        # adaptive_sample_file = open( adaptive_sample_file_name, 'w' )
         print("Saving used adaptive samples to file: " + adaptive_sample_file_name)
+
 
     # set up files to log results at intermediate ELs
     if logging_el:
@@ -538,7 +546,7 @@ def main():
         "log_file_name": log_file_name,
         "sampling": sampling,
         "sample_data": sample_data,
-        "adaptive_sample_file": adaptive_sample_file,
+        "adaptive_sample_file": adaptive_sample_file_name,
         "logging_el": logging_el,
         "log_el_files": log_el_files,
         "intermediate_length": intermediate_length

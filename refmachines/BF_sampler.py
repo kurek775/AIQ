@@ -10,7 +10,7 @@
 import random
 from numpy import zeros, ones, array
 import getopt, sys
-from os.path import isfile
+import os
 
 import BF
 
@@ -228,7 +228,7 @@ def main():
     for opt, arg in opts:
         if   opt == "-s": sample_size = int(arg)
         elif   opt == "-l": minimal_length = int(arg)
-        elif opt == "-r": 
+        elif opt == "-r":
             args = arg.split(",")
             refm_str = args.pop(0)
             for a in args:
@@ -254,7 +254,7 @@ def main():
         sys.exit()
 
     refm_call = refm_str + "." + refm_str + "("
-    
+
     if len(refm_params) > 0:
         param = refm_params.pop(0)
         refm_call += str(int(param))
@@ -265,6 +265,15 @@ def main():
     # create reference machine
     refm = eval( refm_call )
 
+    # set_working_directory (useful for windows for example)
+    script_path_with_script = os.path.abspath(__file__)
+    script_name = (os.path.basename(sys.argv[0]))
+    script_path = script_path_with_script.replace(script_name, '')
+    current_path = os.getcwd()
+
+    if (script_path != current_path):
+        os.chdir(script_path)
+
     # output filename
     file_name = "./samples/"
     file_name += refm_call.partition('.')[2] # strip off the module name and dot
@@ -273,17 +282,18 @@ def main():
     print("Output filename: " + file_name)
     print()
     # check for existing sample file
-    if isfile( file_name ):
+    if os.path.isfile( file_name ):
         print("Output sample file already exists, do you want to:")
-        choice = raw_input.lower(" Append, Overwrite or Quit [a/o/q] ? ")
+        choice = input((" Append, Overwrite or Quit [a/o/q] ? ").lower())
         if   choice == 'a': mode = 'a'
         elif choice == 'o': mode = 'w'
         else: sys.exit()
     else:
         mode = 'w'
 
-    sample_file = open( file_name, mode )
-    
+    sample_file = open( file = file_name, mode = mode )
+
+    percentage = 0
 
     # generate the samples
     for i in range( sample_size ):
@@ -291,6 +301,10 @@ def main():
                 theoretical_sampler )
         sample_file.write( str(s) + " " + program + "\n" )
         sample_file.flush()
+
+        if i%10 == 0:
+            print('Progress: ' + str(i) + '/' + str(sample_size) + ' done!', end='\r')
+
 
     sample_file.close()
 
