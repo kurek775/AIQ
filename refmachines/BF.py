@@ -10,7 +10,7 @@ import random
 import sys
 import re
 
-import ReferenceMachine
+from refmachines import ReferenceMachine
 from numpy import zeros, ones, array, linspace
 from scipy import stats, floor, sqrt
 # from string import replace

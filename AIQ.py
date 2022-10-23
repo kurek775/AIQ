@@ -98,7 +98,7 @@ def _test_agent( refm_call, agent_call, rflip, episode_length,
         # if sufficiently converged expect the same score
         # for the rest of episode
         else:
-            disc_reward += discount*converged_reward
+            disc_reward += discount * converged_reward
             discount    *= disc_rate
 
         if config["logging_el"]:
@@ -106,23 +106,25 @@ def _test_agent( refm_call, agent_call, rflip, episode_length,
                 intermediate_reward = normalise_reward( i, disc_rate, disc_reward )
                 disc_rewards.append( intermediate_reward )
 
-        if multi_rounding_el and not mrel_stop:
-            mrel_stop, converged_reward = evaluate_mrel_stopping_condition( disc_rewards, i )
-            mrel_rewards.append( disc_reward )
+        if config["multi_rounding_el"] and not mrel_stop:
+            mrel_stop, converged_reward = evaluate_mrel_stopping_condition( disc_rewards, i, config )
+            config["mrel_rewards"].append( disc_reward )
 
     # normalise and possibly discount reward
     disc_reward = normalise_reward( episode_length, disc_rate, disc_reward )
 
     # save debug information
-    if debuging_mrel:
+    if config["debuging_mrel"]:
         if mrel_stop:
             mrel_status = "converged"
         else:
             mrel_status = "finished"
-        mrel_debug_file.write( strftime("%Y_%m%d_%H:%M:%S ",localtime()) \
-                + mrel_status + " " + str(disc_reward) + " " + str(estimated_ioc) \
+        mrel_debug_file = open(config["mrel_debug_file_name"], 'w')
+        mrel_debug_file.write( strftime("%Y_%m%d_%H:%M:%S ",localtime())
+                + mrel_status + " " + str(disc_reward) + " " + str(estimated_ioc)
                 + " " + program + " " + str(rflip) + "\n" )
         mrel_debug_file.flush()
+        mrel_debug_file.close()
 
     # dispose of agent and reference machine
     agent = None
@@ -145,17 +147,17 @@ def normalise_reward( episode_length, disc_rate, disc_reward ):
 
 # Evaluate if a stopping condition for a multi-round EL convergence optimalization
 # is met based on which evaluation method is used.
-def evaluate_mrel_stopping_condition( disc_rewards, current_iteration ):
+def evaluate_mrel_stopping_condition( disc_rewards, current_iteration, config ):
     mrel_stop = False
 
     # Call specific evaluator
     if mrel_method == "Delta":
-        mrel_stop, converged_reward = _evaluate_mrel_Delta_stopping_condition( \
-                disc_rewards, current_iteration )
+        mrel_stop, converged_reward = _evaluate_mrel_Delta_stopping_condition(
+                disc_rewards, current_iteration, config )
 
     if mrel_method == "delta":
-        mrel_stop, converged_reward = _evaluate_mrel_delta_stopping_condition( \
-                disc_rewards, current_iteration )
+        mrel_stop, converged_reward = _evaluate_mrel_delta_stopping_condition(
+                disc_rewards, current_iteration, config )
 
     return mrel_stop, converged_reward
 
@@ -163,7 +165,7 @@ def evaluate_mrel_stopping_condition( disc_rewards, current_iteration ):
 # Specific evaluation methods for a multi-round EL convergence optimalization
 # Delta: absolute difference in score at two consecutive ELs to evaluate
 # is less than a specified difference
-def _evaluate_mrel_Delta_stopping_condition( disc_rewards, current_iteration ):
+def _evaluate_mrel_Delta_stopping_condition( disc_rewards, current_iteration, config):
     mrel_stop = False
     converged_reward = None
 
@@ -176,10 +178,10 @@ def _evaluate_mrel_Delta_stopping_condition( disc_rewards, current_iteration ):
             if abs( reward1 - reward2 ) < mrel_Delta_diff:
                 mrel_stop = True
                 # compute avg reward from the converged part of interaction history
-                disc_reward1 = mrel_rewards[-1]
-                disc_reward2 = mrel_rewards[-mrel_Delta_el]
+                disc_reward1 = config["mrel_rewards"][-1]
+                disc_reward2 = config["mrel_rewards"][-mrel_Delta_el]
                 # TODO: probably does not work with discounting
-                converged_reward = normalise_reward( mrel_Delta_el, 1.0, \
+                converged_reward = normalise_reward( mrel_Delta_el, 1.0,
                         disc_reward1 - disc_reward2 )
 
     return mrel_stop, converged_reward
@@ -187,7 +189,7 @@ def _evaluate_mrel_Delta_stopping_condition( disc_rewards, current_iteration ):
 
 # delta: relative difference in score at two consecutive ELs to evaluate
 # is less than a specified percentage
-def _evaluate_mrel_delta_stopping_condition( disc_rewards, current_iteration ):
+def _evaluate_mrel_delta_stopping_condition( disc_rewards, current_iteration, config ):
     mrel_stop = False
     converged_reward = None
 
@@ -201,10 +203,10 @@ def _evaluate_mrel_delta_stopping_condition( disc_rewards, current_iteration ):
                 if abs( 100.0 * ( reward1 - reward2 ) / reward1 ) < mrel_delta_diff:
                     mrel_stop = True
                     # compute avg reward from the converged part of interaction history
-                    disc_reward1 = mrel_rewards[-1]
-                    disc_reward2 = mrel_rewards[-mrel_delta_el]
+                    disc_reward1 = config["mrel_rewards"][-1]
+                    disc_reward2 = config["mrel_rewards"][-mrel_Delta_el]
                     # TODO: probably does not work with discounting
-                    converged_reward = normalise_reward( mrel_delta_el, 1.0, \
+                    converged_reward = normalise_reward( mrel_delta_el, 1.0,
                             disc_reward1 - disc_reward2 )
 
     return mrel_stop, converged_reward
@@ -706,6 +708,8 @@ def main():
             if multi_rounding_el:
                 raise NameError("multi-round EL convergence possible only with verbose EL logging")
 
+    # Assignment for dictionary even if not used
+    mrel_debug_file_name = ''
     # set up file to save multi-round EL convergence debug informations
     if debuging_mrel:
         mrel_debug_file_name = "./debug/" + str(refm) + "_" + str(disc_rate) + "_" \
@@ -721,6 +725,7 @@ def main():
             mrel_debug_file.write("#   delta=" + str(mrel_delta_diff) + "\n")
             mrel_debug_file.write("#   EL=" + str(mrel_delta_el) + "\n")
         mrel_debug_file.flush()
+        mrel_debug_file.close()
         print("MREL debug logging to file:         " + mrel_debug_file_name)
 
     config = {
@@ -731,7 +736,13 @@ def main():
         "adaptive_sample_file": adaptive_sample_file_name,
         "logging_el": logging_el,
         "log_el_files": log_el_files,
-        "intermediate_length": intermediate_length
+        "intermediate_length": intermediate_length,
+        "multi_rounding_el": multi_rounding_el,
+        "mrel_method": mrel_method,
+        "mrel_params": mrel_params,
+        "mrel_rewards": mrel_rewards,
+        "debuging_mrel": debuging_mrel,
+        "mrel_debug_file": mrel_debug_file_name
     }
 
     # run an estimation algorithm
@@ -751,15 +762,15 @@ def main():
     # if logging: log_file.close()
 
     # close adaptive samples file
-    if sampling: adaptive_sample_file.close()
+    # if sampling: adaptive_sample_file.close()
 
     # close log-el files
-    if logging_el:
-        for i in range( episode_length // intermediate_length ):
-            config["log_el_files"].pop().close()
+    # if logging_el:
+    #     for i in range( episode_length // intermediate_length ):
+    #         config["log_el_files"].pop().close()
     
     # close mrel debug file
-    if debuging_mrel: mrel_debug_file.close()
+    # if debuging_mrel: mrel_debug_file.close()
 
 if __name__ == "__main__":
     main()

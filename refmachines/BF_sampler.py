@@ -20,8 +20,8 @@ STRATA = 21
 
 
 # get a random program, excluding over time and passive ones
-def active_program( refm, minimal_length, extending_shorter, theoretical_sampler, \
-        improved_optimization, improved_discriminativeness ):
+def active_program( refm, minimal_length, extending_shorter, theoretical_sampler,
+                    improved_optimization, improved_discriminativeness ):
 
     program = refm.random_program( theoretical_sampler, improved_optimization )
     program_length = len(program)
@@ -345,8 +345,8 @@ def main():
 
     # generate the samples
     for i in range( sample_size ):
-        program, s = active_program( refm, minimal_length, extending_shorter, \
-                theoretical_sampler, improved_optimization, improved_discriminativeness )
+        program, s = active_program( refm, minimal_length, extending_shorter,
+                                     theoretical_sampler, improved_optimization, improved_discriminativeness )
         sample_file.write( str(s) + " " + program + "\n" )
         sample_file.flush()
 
