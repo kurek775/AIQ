@@ -39,7 +39,7 @@ def test_agent( refm_call, a_call, episode_length, disc_rate, stratum, program, 
 
     # log successful intermediate results to files
     if config["logging_el"] and not isnan(r1) and not isnan(r2):
-        for i in range( episode_length / intermediate_length ):
+        for i in range( episode_length // intermediate_length ):
             log_el_file_name = config["log_el_files"].pop(0)
             log_el_file = open(log_el_file_name, 'a')
             log_el_file.write( strftime("%Y_%m%d_%H:%M:%S ",localtime()) \
