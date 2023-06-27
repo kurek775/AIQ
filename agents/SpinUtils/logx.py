@@ -4,6 +4,7 @@ Some simple logging functionality, inspired by rllab's logging.
 
 Logs to a tab-separated-values file (path/to/output_directory/progress.txt)
 
+Modified from the Original Code in: https://github.com/openai/spinningup
 """
 import json
 import joblib

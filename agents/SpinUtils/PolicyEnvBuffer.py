@@ -1,3 +1,8 @@
+"""
+Modified from the Original Code in: https://github.com/openai/spinningup
+Originally PPOBuffer from ppo.py
+"""
+
 import numpy as np
 import torch
 import torch.nn.functional as F

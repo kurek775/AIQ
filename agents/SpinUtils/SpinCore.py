@@ -1,3 +1,11 @@
+
+"""
+A core file for Spinning up VPG and PPO. Contains initializations for (limited to Discrete env) neural networks
+(Categorical Actor, MLP Critic)
+
+Modified from the Original Code in: https://github.com/openai/spinningup
+"""
+
 import numpy as np
 import scipy.signal
 
@@ -5,11 +13,6 @@ import torch
 import torch.nn as nn
 from torch.distributions.normal import Normal
 from torch.distributions.categorical import Categorical
-
-"""
-A core file for Spinning up VPG and PPO. Contains initializations for (limited to Discrete env) neural networks 
-(Categorical Actor, MLP Critic)
-"""
 
 def combined_shape(length, shape=None):
     if shape is None:

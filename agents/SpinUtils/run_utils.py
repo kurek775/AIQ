@@ -1,3 +1,7 @@
+"""
+Modified from the Original Code in: https://github.com/openai/spinningup
+"""
+
 import os.path as osp
 import time
 

@@ -1,3 +1,7 @@
+"""
+Modified from the Original Code in: https://github.com/openai/spinningup
+"""
+
 from mpi4py import MPI
 import os, subprocess, sys
 import numpy as np

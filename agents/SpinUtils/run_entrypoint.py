@@ -1,3 +1,7 @@
+"""
+Modified from the Original Code in: https://github.com/openai/spinningup
+"""
+
 import zlib
 import pickle
 import base64
