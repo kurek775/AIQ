@@ -33,11 +33,6 @@ def test_agent( refm_call, a_call, episode_length, disc_rate, stratum, program, 
 
     # log successful result to file
     if config["logging"] and not isnan(r1) and not isnan(r2):
-        log_file = open( config["log_file_name"], 'a' )
-        log_file.write( strftime("%Y_%m%d_%H:%M:%S ",localtime()) \
-              + str(s1) + " " + str(r1) + " " + str(r2) + "\n" )
-        log_file.flush()
-        log_file.close()
         with open(config["log_file_name"], 'a' ) as log_file:
             log_file.write(strftime("%Y_%m%d_%H:%M:%S ", localtime()) \
                            + str(s1) + " " + str(r1) + " " + str(r2) + "\n")
@@ -80,15 +75,6 @@ def delist(i,array,depth):
         if i not in array:
             array.append(int(i))
 
-def delist(i,array,depth):
-    if isinstance(i,list) or isinstance(i,numpy.ndarray):
-        # print(str(i) + "-" + str(depth))
-        for j in i:
-            delist(j,array,depth+1)
-    else:
-        if i not in array:
-            array.append(int(i))
-
 # Perform a single run of an agent in an enviornment and collect the results
 def _test_agent( refm_call, agent_call, rflip, episode_length,
                  disc_rate, stratum, program, config ):
@@ -116,18 +102,13 @@ def _test_agent( refm_call, agent_call, rflip, episode_length,
     episode_symbols = []
     episode_actions = []
 
+    agent_failure = '-'
+
     for i in range(1, episode_length + 1 ):
         # test only if not sufficiently converged
         # or if no mrel optimalization used
         if not mrel_stop:
-            try:
-                action = agent.perceive( observations, rflip*reward)
-            except ValueError as e:
-                with open('log/' + agent.__str__() + time.strftime("_%Y_%m%d_%H_%M_%S", time.localtime()) + '_Exception.log', 'a') as errorFile:
-                    exception_log = f'{str(stratum)} : {program} \n'
-                    errorFile.write(exception_log)
-                action = 2
-
+            action = agent.perceive(observations, rflip * reward)
 
             reward, observations, steps = refm.act( action )
 
@@ -208,7 +189,6 @@ def _test_agent( refm_call, agent_call, rflip, episode_length,
     #                     vals.append(val)
     #                 vals.append(program)
     #                 output_file.write(";".join(map(str,vals))+"\n")
-
     # save debug information
     if config["debuging_mrel"]:
         if mrel_stop:
@@ -560,6 +540,7 @@ mrel_rewards = []
 debuging_mrel = False
 mrel_debug_file = None
 agent_symbol_debug = False
+logging_agent_failures = False
 
 def main():
 
@@ -576,7 +557,8 @@ def main():
     try:
         opts, args = getopt.getopt(sys.argv[1:], "r:d:l:a:n:s:t:",
                                    ["multi_round_el=", "help", "log", "simple_mc",
-                                    "save_samples", "verbose_log_el", "debug_mrel","agent_symbol_debug"])
+                                    "save_samples", "verbose_log_el", "debug_mrel","agent_symbol_debug",
+                                    "log_agent_failures"])
     except getopt.GetoptError as err:
         print(str(err))
         usage()
@@ -826,6 +808,17 @@ def main():
         with open("./symbol-debug/refm_actions", "w") as actions:
             actions.write("List of unique data passed to agent every episode:" + "\n")
 
+    agent_failure_dir = ""
+    if logging_agent_failures:
+        if not os.path.exists("./policy-log"):
+            os.makedirs("./policy-log")
+        agent_failure_dir = str(refm) + "_" + str(disc_rate) + "_" \
+                          + str(episode_length) + "_" + str(agent) + cluster_node \
+                          + strftime("_%Y_%m%d_%H_%M_%S", localtime())
+        agent_failure_dir = "./policy-log/" + agent_failure_dir
+        if not os.path.exists(agent_failure_dir):
+            os.makedirs(agent_failure_dir)
+
 
     # Assignment for dictionary even if not used
     mrel_debug_file_name = ''
@@ -864,6 +857,8 @@ def main():
         "mrel_debug_file": mrel_debug_file_name,
         "agent_symbol_debug": agent_symbol_debug,
         "agent_symbol_debug_files": agent_symbol_debug_filepaths,
+        "logging_agent_failures": logging_agent_failures,
+        "logging_agent_failures_folder": agent_failure_dir
     }
 
     # run an estimation algorithm
