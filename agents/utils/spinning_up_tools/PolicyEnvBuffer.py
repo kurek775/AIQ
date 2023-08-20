@@ -5,8 +5,7 @@ Originally PPOBuffer from ppo.py
 
 import numpy as np
 import torch
-import torch.nn.functional as F
-from agents.SpinUtils import SpinCore as core
+from agents.utils.spinning_up_tools import SpinCore as core
 from .mpi_tools import mpi_statistics_scalar
 
 

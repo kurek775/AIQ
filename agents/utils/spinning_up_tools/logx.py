@@ -97,15 +97,6 @@ class Logger:
         """
         if proc_id()==0:
             self.output_dir = output_dir or "/tmp/experiments/%i"%int(time.time())
-            # if not osp.exists(self.output_dir):
-                # print("Warning: Log dir %s already exists! Storing info there anyway."%self.output_dir)
-                # print("")
-
-            # else:
-            #     os.makedirs(self.output_dir)
-            # self.output_file = open(osp.join(self.output_dir, output_fname), 'w')
-            # atexit.register(self.output_file.close)
-            # print(colorize("Logging data to %s"%self.output_file.name, 'green', bold=True))
         else:
             self.output_dir = None
             self.output_file = None
@@ -282,25 +273,6 @@ class Logger:
 
         Writes both to stdout, and to the output file.
         """
-        # if proc_id()==0:
-        #     vals = []
-        #     key_lens = [len(key) for key in self.log_headers]
-        #     max_key_len = max(15,max(key_lens))
-        #     keystr = '%'+'%d'%max_key_len
-        #     fmt = "| " + keystr + "s | %15s |"
-        #     n_slashes = 22 + max_key_len
-        #     # print("-"*n_slashes)
-        #     for key in self.log_headers:
-        #         val = self.log_current_row.get(key, "")
-        #         valstr = "%8.3g"%val if hasattr(val, "__float__") else val
-        #         # print(fmt%(key, valstr))
-        #         vals.append(val)
-            # print("-"*n_slashes, flush=True)
-            # if self.output_file is not None:
-            #     if self.first_row:
-            #         self.output_file.write(",".join(self.log_headers)+"\n")
-            #     self.output_file.write(",".join(map(str,vals))+"\n")
-            #     self.output_file.flush()
         self.log_full.append(self.log_current_row.copy())
         self.log_current_row.clear()
         self.first_row=False

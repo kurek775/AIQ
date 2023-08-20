@@ -9,11 +9,11 @@ Modified By: Petr Zeman 2022
 
 from .Agent import Agent
 import numpy as np
-from .SpinUtils import mpi_pytorch, SpinCore as core, mpi_tools
+from agents.utils.spinning_up_tools import mpi_pytorch, SpinCore as core, mpi_tools
 from torch.optim import Adam
-from .SpinUtils.logx import EpochLogger
-from .SpinUtils.PolicyEnvBuffer import PolicyEnvBuffer
-from .SpinUtils.run_utils import setup_logger_kwargs
+from agents.utils.spinning_up_tools.logx import EpochLogger
+from agents.utils.spinning_up_tools.PolicyEnvBuffer import PolicyEnvBuffer
+from agents.utils.spinning_up_tools.run_utils import setup_logger_kwargs
 import torch
 import sys
 import time
