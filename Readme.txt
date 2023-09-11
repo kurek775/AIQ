@@ -170,6 +170,12 @@ MC_AIXI.py Wrapper for Monte Carlo AIXI agent.  Must have an
 executable call mc-aixi in this directory in order to run.  C++ code
 for MC-AIXI can be downloaded from the internet.
 
+IbaVPG.py  Minimalistic implementation of Vanilla Policy Gradient agent lacking Advantage Estimate function and using only Rewards-To-Go - Based on https://github.com/lbarazza/VPG-PyTorch
+
+VPG.py  Implementation of Vanilla Policy Gradient agent based on OpenAI SpinningUp - https://spinningup.openai.com/en/latest/algorithms/vpg.html
+
+PPO.py  Implementation of Proximal Policy Optimization agent based on OpenAI SpinningUp - https://spinningup.openai.com/en/latest/algorithms/ppo.html
+
 
 
 /refmachines
