@@ -110,6 +110,10 @@ Arguments:
   Useful for sanity checks and also debugging as it doesn't do any
   async stuff etc.
 
+--log_agent_failures - Outputs information about inner agent variables if supported by agent. Currently disabled (Code (AIQ.py row 171-191) is commented and supported only by VPG and PPO) - Warning: Massive amount of data.
+
+--agent_symbol_debug - Logs symbols given and received by agent. Observation symbols are provided in two separate files - once as raw numbers, once in type actually provided.
+
 
 An example run of AIQ would be:
 
