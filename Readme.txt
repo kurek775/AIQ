@@ -180,7 +180,7 @@ VPG.py  Implementation of Vanilla Policy Gradient agent based on OpenAI Spinning
 
 PPO.py  Implementation of Proximal Policy Optimization agent based on OpenAI SpinningUp - https://spinningup.openai.com/en/latest/algorithms/ppo.html
 
-
+Sarsa_l.py  Sarsa with eligibility traces.
 
 /refmachines
 
