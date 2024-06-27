@@ -10,10 +10,11 @@ from numpy import zeros, ones
 import numpy as np
 from random import randint, randrange, random
 import sys
+import json
 import os
 from agents.utils.spinning_up_tools.logx import EpochLogger
 from .utils.observation_encoder import encode_observations_int
-
+from datetime import datetime
 
 class Sarsa_l(Agent):
 
@@ -29,7 +30,7 @@ class Sarsa_l(Agent):
         self.Lambda = Lambda
         self.epsilon = epsilon
         self.alpha = alpha
-        self.logger = dict()
+        self.logger = []
 
         # if the internal discount rate isn't set, use the environment value
         if gamma == 0:
@@ -51,7 +52,7 @@ class Sarsa_l(Agent):
     def reset(self):
         self.state = 0
         self.action = 0
-        self.logger = dict()
+        self.logger = []
         self.failed = False
 
         self.Q_value = self.init_Q * ones((self.num_states, self.num_actions))
@@ -97,15 +98,15 @@ class Sarsa_l(Agent):
                  naction = self.soft_max(Q[nstate], self.epsilon)
         # update Q values using old state, old action, reward, new state and next action
         delta_Q = reward + gamma * Q[nstate, naction] - Q[self.state, self.action]
-        q_value = Q[self.state, self.action]
-        e_value = E[self.state, self.action]
-        self.log_update(q_value,e_value,self.state,self.action)
+        if self.logging_enabled:
+            q_value = Q[self.state, self.action]
+            e_value = E[self.state, self.action]
+            self.log_update(q_value,e_value,self.state,self.action)
         E[self.state, self.action] += 1
         for s in range(self.num_states):
             for a in range(self.num_actions):
                 Q[s, a] = Q[s, a] + self.alpha * delta_Q * E[s, a]
                 E[s, a] = E[s, a] * gamma * self.Lambda
-                
                 # Q value suggests a soft divergence occured
                 if Q[s, a] > self.divergence_limit or Q[s, a] < -self.divergence_limit:
                     self.failed = True
@@ -117,9 +118,16 @@ class Sarsa_l(Agent):
         return naction
 
     def log_update(self, Q, E,s,a):
-        self.logger.update(
+        self.logger.append(
             {"Q_value": Q, "E_trace":E, "state": s, "action": a}
         )
 
     def get_logs(self) -> dict:
-        return self.logger
+        timestamp = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        dir = './log-agent-interactions/'
+        if not os.path.exists(dir):
+                os.makedirs(dir)
+        output_filename = dir+self.__str__() + '_'+timestamp + ".json"
+        with open(output_filename, 'w') as output_file:
+            json.dump(self.logger, output_file, indent=4)
+        return dict()
