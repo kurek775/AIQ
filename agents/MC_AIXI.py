@@ -7,7 +7,7 @@
 # Released under GNU GPLv3
 #
 
-from Agent import Agent
+from .Agent import Agent
 from numpy import zeros, ones, ceil
 import  numpy as np
 import subprocess
@@ -34,12 +34,15 @@ def binstr_2_int( bit_s ):
 class MC_AIXI(Agent):
 
     def __init__( self, refm, disc_rate, sims, depth, horizon, \
-                  epsilon=0.05, threads=1, memory=32 ):
+                  epsilon, decay, threads=1, memory=32 ):
 
         Agent.__init__( self, refm, disc_rate )
 
         if epsilon > 1.0: epsilon = 1.0
         if epsilon < 0.0: epsilon = 0.0
+
+        if decay > 1.0: decay = 1.0
+        if decay < 0.0: decay = 0.0
 
         self.refm = refm
         self.sims = int(sims)
@@ -47,6 +50,7 @@ class MC_AIXI(Agent):
         self.horizon = int(horizon)
         self.memory = int(memory)
         self.epsilon = epsilon
+        self.decay = decay
         self.threads = int(threads)
 
         self.obs_cells   = refm.getNumObsCells()
@@ -56,8 +60,8 @@ class MC_AIXI(Agent):
         self.reward_bits = int(ceil(log( refm.getNumRewards(), 2.0 )))
         self.num_actions = refm.getNumActions()
 
-        print "obs_bits = ", self.obs_bits
-        print "reward_bits = ", self.reward_bits
+        print("obs_bits = ", self.obs_bits)
+        print("reward_bits = ", self.reward_bits)
 
         self.agent = None
 
@@ -65,7 +69,8 @@ class MC_AIXI(Agent):
 
     def __str__( self ):
         return "MC_AIXI(" + str(self.sims) + "," + str(self.depth) + "," \
-               + str(self.horizon) + "," + str(self.epsilon) + ")"
+               + str(self.horizon) + "," + str(self.epsilon) + "," \
+               + str(self.decay) + ")"
 
 
     def __del__( self ):
@@ -89,6 +94,7 @@ class MC_AIXI(Agent):
                     "--agent-horizon",    str(self.horizon),
                     "--memsearch",        str(self.memory),
                     "--exploration",      str(self.epsilon),              
+                    "--explore-decay",    str(self.decay),
 		    "--threads",          str(self.threads),
                     "--observation-bits", str(self.obs_bits),
                     "--reward-bits",      str(self.reward_bits),

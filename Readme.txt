@@ -90,9 +90,29 @@ Arguments:
 
 --log  Switch on output logging
 
+--save_samples  Switch on saving of environment programs used during
+  the test to a file, needs adaptive-samples directory.
+
+--verbose_log_el  Swith on logging intermediate results every 1000
+  interactions, needs log-el directory.
+
+--multi_round_el=method,param1,param2,...  Swith on multi-round EL
+  convergence optimalization using selected method and parameters:
+	(this technique increases the consumption of RAM considerably)
+    Delta,Difference,EL_to_evaluate  absolute difference of AIQ
+		  is less then Difference, computed every EL_to_evaluate nr.
+			of iterations.
+    delta,difference,EL_to_evaluate  relative difference of AIQ
+		  is less then difference in percent, computed every
+			 EL_to_evaluate nr. of iterations.
+
 --simple_mc Use a simple MC sample rather than the stratified sampler.
   Useful for sanity checks and also debugging as it doesn't do any
   async stuff etc.
+
+--log_agent_failures - Outputs information about inner agent variables if supported by agent. Currently disabled (Code (AIQ.py row 171-191) is commented and supported only by VPG and PPO) - Warning: Massive amount of data.
+
+--agent_symbol_debug - Logs symbols given and received by agent. Observation symbols are provided in two separate files - once as raw numbers, once in type actually provided.
 
 
 An example run of AIQ would be:
@@ -154,7 +174,13 @@ MC_AIXI.py Wrapper for Monte Carlo AIXI agent.  Must have an
 executable call mc-aixi in this directory in order to run.  C++ code
 for MC-AIXI can be downloaded from the internet.
 
+IbaVPG.py  Minimalistic implementation of Vanilla Policy Gradient agent lacking Advantage Estimate function and using only Rewards-To-Go - Based on https://github.com/lbarazza/VPG-PyTorch
 
+VPG.py  Implementation of Vanilla Policy Gradient agent based on OpenAI SpinningUp - https://spinningup.openai.com/en/latest/algorithms/vpg.html
+
+PPO.py  Implementation of Proximal Policy Optimization agent based on OpenAI SpinningUp - https://spinningup.openai.com/en/latest/algorithms/ppo.html
+
+Sarsa_l.py  Sarsa with eligibility traces.
 
 /refmachines
 
@@ -173,7 +199,13 @@ in a sample file.  You have to name the file correctly yourself to
 match what AIQ expects.  The -s option tell it how many samples to
 generate. The file consists of just rows of samples so you can
 concatenate the output of different runs to make a combined sample
-file.
+file. The -l option specifies minimal length of generated programs
+(by default, shorter programs are dropped during the sampling process,
+to extend the shorter programs add option --extend_shorter.)
+The  --theoretical_sampler option disables all BF code optimization
+and also outputs programs that are passive or overtime.
+The --improved_optimization option enables optimization of sampled
+programs by removing further pointless code.
 
 
 /refmachine/sample 

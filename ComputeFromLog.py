@@ -5,7 +5,7 @@
 # Released under GNU GPLv3
 
 
-from scipy import ones, zeros, floor, array, sqrt, cov
+from numpy import ones, zeros, floor, array, sqrt, cov
 
 import getopt, sys
 
@@ -32,7 +32,14 @@ def estimate( file, detailed ):
     # read in log file results
     num_samples = 0
     for result in file:
-        stamp, stratum, perf1, perf2 = result.split()
+        split_result = result.split()
+        #stamp = split_result[0]
+        stratum = split_result[1]
+        perf1 = split_result[2]
+        perf2 = split_result[3]
+        #fail1 = split_result[4]
+        #fail2 = split_result[5]
+        #program = split_result[6]
         z = int(stratum)
         if True: #z > 10:
             Y[int(stratum)].append( (float(perf1),float(perf2)) )
@@ -60,21 +67,20 @@ def estimate( file, detailed ):
     if detailed:
         for i in range(1,I):
             stratum_samples = len(Y[i])*2.0
-            print " % 3d % 5d" % (i, stratum_samples ),
+            print(" % 3d % 5d" % (i, stratum_samples), end=' ')
 
             if stratum_samples == 0:
                 # no samples, so skip mean and half CI
-                print
+                print()
             elif stratum_samples < 4:
                 # don't report half CI with less than 4 samples
-                print " % 6.1f" % (array(Y[i]).mean() )
+                print(" % 6.1f" % (array(Y[i]).mean()))
             else:
                 # do a full report
-                print " % 6.1f +/- % 5.1f" \
-                   % (array(Y[i]).mean(), 1.96*s[i]/sqrt(stratum_samples) )
+                print(" % 6.1f +/- % 5.1f SD % 5.1f"
+                      % (array(Y[i]).mean(), 1.96 * s[i] / sqrt(stratum_samples), s[i]))
 
-        print
-
+        print()
     # compute the current estimate and 95% confidence interval
     est = 0.0
     for i in range(1,I):
@@ -82,16 +88,17 @@ def estimate( file, detailed ):
         if p[i] > 0.0 and stratum_samples > 2:
             est += p[i]/stratum_samples * array(Y[i]).sum()
 
-    delta = 1.96 * sum(p*s) / sqrt(num_samples)
+    ssd = sum(p*s)
+    delta = 1.96 * ssd / sqrt(num_samples)
 
-    print "%6i  % 5.1f +/- % 5.1f" % (num_samples, est, delta ),
+    print(f"{num_samples:6d}  {est: 5.1f} +/- {delta: 5.1f} SD {ssd: 5.1f}", end=' ')
 
     return
 
 
 # print basic usage
 def usage():
-    print "python ComputeFromLog [--full] log_file_name [log_file_name ...]" 
+    print("python ComputeFromLog [--full] log_file_name [log_file_name ...]")
 
 
 # main function that just sets things up and then calls the sampler
@@ -104,10 +111,9 @@ def main():
 
     detailed = False
 
-    print
-    print "Compute AIQ from log file results, version 1.0"
-    print
-
+    print()
+    print("Compute AIQ from log file results, version 1.0")
+    print()
     sys.argv.pop(0)
 
     if len(sys.argv) == 0:
@@ -125,8 +131,8 @@ def main():
     for file_name in sys.argv:
         file = open( file_name, 'r')
         estimate( file, detailed )
-        print ":" + basename(file_name)
-        if detailed: print
+        print(":" + basename(file_name))
+        if detailed: print()
         file.close()
     
 

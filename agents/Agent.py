@@ -8,8 +8,8 @@
 # Released under GNU GPLv3
 #
 
-from scipy import zeros
-from scipy import exp
+from numpy import zeros
+from numpy import exp
 from random import randrange
 from random import random
 
@@ -21,6 +21,7 @@ class Agent:
         self.num_actions = refm.getNumActions()
         self.sel_mode    = 0
         self.disc_rate   = disc_rate
+        self.failed      = False
 
     def __str__( self ):
         raise NameError("You need to override Agent.__str__")
@@ -34,6 +35,14 @@ class Agent:
     def perceive( self, new_obs, reward ):
         raise NameError("You need to override Agent.perceive!")
 
+    # If implemented should dump inner log file of agent, not required therefore pass
+    # Shuld return List of dictionaries where each dictionary is one row with Column->Value
+    def get_full_log(self):
+        pass
+
+    # Report whether some kind of failure occured
+    def has_failed( self ):
+        return self.failed
 
     # return the index of the highest q_value, choosing one
     # of them at random if multiple optimal values exist
@@ -89,12 +98,12 @@ class Agent:
 
         # find max and min values, do this manually to avoid python call
         for i in range(q_values.size):
-            rescaled_v[i] = q_values[i]/epsilon;
+            rescaled_v[i] = q_values[i]/epsilon
             if rescaled_v[i] > max_val: max_val = rescaled_v[i]
             if rescaled_v[i] < min_val: min_val = rescaled_v[i]
 
         if max_val > 1e8:
-            print "warning: max_val exceeds 1e8 : ", max_val
+            print("warning: max_val exceeds 1e8 : ", max_val)
 
         # rescale and clip if needed
         if min_val < -595.0 or max_val > 595.0:

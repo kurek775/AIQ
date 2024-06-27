@@ -6,7 +6,7 @@
 # Released under GNU GPLv3
 #
 
-from Agent import Agent
+from .Agent import Agent
 from numpy import zeros, ones
 import numpy as np
 from random import randint, randrange, random
@@ -35,9 +35,11 @@ class Q_l(Agent):
             self.gamma = gamma
 
         if self.gamma >= 1.0:
-            print "Error: Q learning can only handle an internal discount rate ", \
-                  "that is below 1.0"
+            print("Error: Q learning can only handle an internal discount rate ",
+                  "that is below 1.0")
             sys.exit()
+
+        self.divergence_limit = 100 * (1 + self.Lambda) / (1 - self.gamma)
             
         self.reset()
 
@@ -46,6 +48,8 @@ class Q_l(Agent):
 
         self.state  = 0
         self.action = 0
+
+        self.failed = False
 
         self.Q_value = self.init_Q * ones( (self.num_states, self.num_actions) )
         self.E_trace = zeros( (self.num_states, self.num_actions) )
@@ -101,6 +105,9 @@ class Q_l(Agent):
                     E[s,a] = E[s,a] * gamma * self.Lambda
                 else:
                     E[s,a] = 0.0  # reset on exploration
+                # Q value suggests a soft divergence occured
+                if Q[s,a] > self.divergence_limit or Q[s,a] < - self.divergence_limit:
+                    self.failed = True
 
  
         # update the old action and state

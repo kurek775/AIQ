@@ -8,18 +8,18 @@
 
 import random
 import sys
+import re
 
-from ReferenceMachine import *
-
+from refmachines import ReferenceMachine
 from numpy import zeros, ones, array, linspace
 from scipy import stats, floor, sqrt
-from string import replace
+# from string import replace
 
 
 INSTRUCTIONS = ['<','>','+','-',',','.','[',']','#', '%' ]
 
 
-class BF(ReferenceMachine):
+class BF(ReferenceMachine.ReferenceMachine):
 
 
     # create a new BF reference machine, default to a tape with 5 symbols
@@ -223,7 +223,7 @@ class BF(ReferenceMachine):
                 self.cycle_end = True
 
             else:
-                print "Error: Unknown instruction ", instr
+                print("Error: Unknown instruction ", instr)
                 self.cycle_end = True
 
             instr_ptr += 1
@@ -233,7 +233,7 @@ class BF(ReferenceMachine):
 
 
     # sample a random program, used by BF_sampler.py
-    def random_program( self ):
+    def random_program( self, theoretical_sampler, improved_optimization ):
 
         program = ""
         loop_depth = 0
@@ -246,15 +246,44 @@ class BF(ReferenceMachine):
             if loop_depth < 0: instr = '#'   # if ] unmatched, end the program
             program += instr
 
-        # remove some simple pointless instruction combinations
-        program = replace(program,'+-','')
-        program = replace(program,'-+','')
-        program = replace(program,'<>','')
-        program = replace(program,'><','')
-        program = replace(program,'[]','')
+        # Otimize unless generating a theoretical sample
+        if theoretical_sampler:
+            return program
+        else:
+            optimized_program = self._optimize_program( program, improved_optimization )
+
+            return optimized_program
+
+
+
+    # remove some simple pointless instruction combinations
+    def _optimize_program( self, program, improved_optimization ):
+
+        # the original patterns by Legg and Vennes
+        replace_patterns = [
+                ['\+\-',''], ['\-\+',''], ['<>',''], ['><',''], ['\[\]','']
+                ]
+        # the new patterns by Vadinsky
+        if improved_optimization:
+            replace_patterns += [
+                ['%[\+\-]+','%'], #incrementation/decrementation of random symbol
+                ['[%\+\-]+%','%'], #overwritten by a random symbol
+                ['[%\+\-]+,',','], #overwritten by a read action
+                ['\[[\+\-%]+\]%','%'], #zeroing overwritten by a random symbol
+                ['\[[\+\-%]+\],',','], #zeroing overwritten by a read action
+                ['\[[\+\-\%][\+\-%]+\]','[+]'], #multiple instructions in zeroing loop
+                ['%\[\+\]','[+]'] #zeroing a random symbol
+                ]
+
+        pattern_replaced = True
+        while pattern_replaced:
+            pattern_replaced = False
+            for replace_pattern in replace_patterns:
+                if re.search(replace_pattern[0],program) is not None:
+                    program = re.sub(replace_pattern[0],replace_pattern[1],program)
+                    pattern_replaced = True
 
         return program
-
 
 
 
